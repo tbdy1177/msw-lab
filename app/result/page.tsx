@@ -71,13 +71,13 @@ export default function ResultPage() {
 
   if (isLoading || !analysis) {
     return (
-      <main className="min-h-screen flex flex-col items-center justify-center px-4 py-12 bg-gray-50">
-        <div className="w-full max-w-md space-y-4 animate-pulse">
-          <div className="h-6 bg-gray-200 rounded-full w-1/2 mx-auto" />
-          <div className="h-48 bg-gray-200 rounded-2xl" />
-          <div className="h-20 bg-gray-200 rounded-2xl" />
-          <div className="h-20 bg-gray-200 rounded-2xl" />
-          <div className="h-20 bg-gray-200 rounded-2xl" />
+      <main className="min-h-screen flex flex-col items-center justify-center px-4 py-12 bg-amber-50">
+        <div className="w-full max-w-lg space-y-4 animate-pulse">
+          <div className="h-6 bg-amber-100 rounded-full w-1/2 mx-auto" />
+          <div className="h-48 bg-amber-100 rounded-3xl" />
+          <div className="h-20 bg-amber-100 rounded-3xl" />
+          <div className="h-20 bg-amber-100 rounded-3xl" />
+          <div className="h-20 bg-amber-100 rounded-3xl" />
         </div>
         <p className="mt-6 text-sm text-gray-400">대화를 분석하고 있어요...</p>
         {error && (
@@ -96,18 +96,18 @@ export default function ResultPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 pb-20">
-      <div className="max-w-md mx-auto px-4 pt-10 space-y-6">
-        <h1 className="text-2xl font-black text-center text-gray-800">결과 리포트</h1>
+    <main className="min-h-screen bg-amber-50 pb-20">
+      <div className="max-w-lg mx-auto px-4 pt-10 space-y-6">
+        <h1 className="text-2xl font-black text-center text-gray-800 tracking-tight">결과 리포트 🏆</h1>
 
         {/* Section A: 종합 점수 */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col items-center">
+        <div className="bg-white rounded-3xl p-6 shadow-sm border-2 border-amber-100 flex flex-col items-center">
           <ScoreGauge score={analysis.totalScore} grade={analysis.grade} />
         </div>
 
         {/* Section B: 항목별 분석 */}
         <div className="space-y-3">
-          <h2 className="text-base font-bold text-gray-700">항목별 분석</h2>
+          <h2 className="text-base font-black text-gray-800 tracking-tight">항목별 분석</h2>
           {analysis.categories.map((cat) => (
             <CategoryScore
               key={cat.name}
@@ -119,9 +119,9 @@ export default function ResultPage() {
         </div>
 
         {/* Section C: 피드백 */}
-        <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-5">
+        <div className="bg-white rounded-3xl p-5 shadow-sm border-2 border-amber-100 space-y-5">
           <div>
-            <h2 className="text-base font-bold text-green-600 mb-3">👍 잘한 점</h2>
+            <h2 className="text-base font-black text-green-600 mb-3 tracking-tight">👍 잘한 점</h2>
             <ul className="space-y-2">
               {analysis.strengths.map((s, i) => (
                 <li key={i} className="text-sm text-gray-600 flex gap-2">
@@ -132,7 +132,7 @@ export default function ResultPage() {
             </ul>
           </div>
           <div>
-            <h2 className="text-base font-bold text-amber-500 mb-3">💡 개선할 점</h2>
+            <h2 className="text-base font-black text-amber-500 mb-3 tracking-tight">💡 개선할 점</h2>
             <ul className="space-y-4">
               {analysis.improvements.map((imp, i) => (
                 <li key={i} className="text-sm">
@@ -145,11 +145,11 @@ export default function ResultPage() {
         </div>
 
         {/* Section D: 공유 이미지 */}
-        <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-3">
-          <h2 className="text-base font-bold text-gray-700">공유하기</h2>
+        <div className="bg-white rounded-3xl p-5 shadow-sm border-2 border-amber-100 space-y-3">
+          <h2 className="text-base font-black text-gray-800 tracking-tight">공유하기</h2>
           <button
             onClick={() => setShowPreview(!showPreview)}
-            className="w-full py-3 border border-gray-200 text-gray-600 text-sm font-medium rounded-xl hover:bg-gray-50 transition"
+            className="w-full py-3 border-2 border-amber-200 text-amber-600 text-sm font-bold rounded-2xl hover:bg-amber-50 transition"
           >
             {showPreview ? '미리보기 숨기기' : '공유 카드 미리보기'}
           </button>
@@ -170,7 +170,7 @@ export default function ResultPage() {
           <button
             onClick={handleDownload}
             disabled={isSaving}
-            className="w-full py-3 bg-indigo-500 text-white font-bold rounded-xl disabled:opacity-60 hover:bg-indigo-600 active:scale-95 transition-all text-sm"
+            className="w-full py-3 bg-amber-400 text-white font-black rounded-2xl disabled:opacity-60 hover:bg-amber-500 active:scale-95 transition-all text-sm tracking-tight"
           >
             {isSaving ? '저장 중...' : '이미지 저장하기'}
           </button>
@@ -179,7 +179,7 @@ export default function ResultPage() {
         {/* 다시 하기 */}
         <button
           onClick={handleReset}
-          className="w-full py-4 border-2 border-indigo-200 text-indigo-500 font-bold rounded-xl hover:bg-indigo-50 active:scale-95 transition-all"
+          className="w-full py-4 border-2 border-amber-300 text-amber-600 font-black rounded-2xl hover:bg-amber-50 active:scale-95 transition-all tracking-tight"
         >
           다시 하기
         </button>
