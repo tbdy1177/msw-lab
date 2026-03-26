@@ -17,14 +17,19 @@ export async function POST(req: NextRequest) {
 - 한국어로 답하세요
 - 답변은 2~4문장으로 짧고 현실적으로`;
 
+  const apiMessages =
+    messages.length === 0
+      ? [{ role: 'user' as const, content: '대화를 시작해주세요.' }]
+      : messages.map((m: { role: string; content: string }) => ({
+          role: m.role as 'user' | 'assistant',
+          content: m.content,
+        }));
+
   const stream = anthropic.messages.stream({
     model: 'claude-sonnet-4-6',
     max_tokens: 1024,
     system: systemPrompt,
-    messages: messages.map((m: { role: string; content: string }) => ({
-      role: m.role as 'user' | 'assistant',
-      content: m.content,
-    })),
+    messages: apiMessages,
   });
 
   const readableStream = new ReadableStream({
