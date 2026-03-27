@@ -19,7 +19,6 @@ export default function ChatPage() {
   const bottomRef = useRef<HTMLDivElement>(null);
   const hasInitialized = useRef(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const inputBarRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!target || !situation) {
@@ -39,22 +38,6 @@ export default function ChatPage() {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, streamingContent]);
 
-  useEffect(() => {
-    const viewport = window.visualViewport;
-    if (!viewport) return;
-    const update = () => {
-      if (inputBarRef.current) {
-        const offset = window.innerHeight - viewport.height - viewport.offsetTop;
-        inputBarRef.current.style.transform = `translateY(-${offset}px)`;
-      }
-    };
-    viewport.addEventListener('resize', update);
-    viewport.addEventListener('scroll', update);
-    return () => {
-      viewport.removeEventListener('resize', update);
-      viewport.removeEventListener('scroll', update);
-    };
-  }, []);
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -142,9 +125,9 @@ export default function ChatPage() {
   if (!target || !situation) return null;
 
   return (
-    <div className="h-dvh bg-amber-50 flex flex-col">
-      {/* Header - fixed top */}
-      <div className="bg-white fixed top-0 left-0 right-0 z-10">
+    <div className="h-dvh bg-amber-50 flex flex-col overflow-hidden">
+      {/* Header */}
+      <div className="bg-white shrink-0 z-10">
         <div className="max-w-lg mx-auto px-4 py-3 flex items-center gap-3">
           <button
             onClick={() => router.push('/')}
@@ -180,8 +163,8 @@ export default function ChatPage() {
       )}
 
       {/* Chat area */}
-      <div className="flex-1 overflow-y-auto pt-[57px]">
-        <div className="max-w-lg mx-auto px-4 py-4 pb-24">
+      <div className="flex-1 overflow-y-auto">
+        <div className="max-w-lg mx-auto px-4 py-4">
           {messages.map((msg, i) => (
             <ChatBubble key={i} role={msg.role} content={msg.content} characterImage={characterImage} />
           ))}
@@ -193,8 +176,8 @@ export default function ChatPage() {
         </div>
       </div>
 
-      {/* Input bar - fixed above keyboard */}
-      <div ref={inputBarRef} className="bg-white fixed bottom-0 left-0 right-0 z-20">
+      {/* Input bar */}
+      <div className="bg-white shrink-0 z-10">
         <div className="max-w-lg mx-auto px-4 py-3 flex gap-2 items-end">
           <textarea
             ref={textareaRef}

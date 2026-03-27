@@ -80,12 +80,25 @@ export default function ResultPage() {
     setIsSaving(true);
     try {
       const dataUrl = await generateShareImage(displayAnalysis);
+      // 모바일: Web Share API로 사진 앱에 바로 저장
+      if (navigator.share && navigator.canShare) {
+        const res = await fetch(dataUrl);
+        const blob = await res.blob();
+        const file = new File([blob], 'msw-lab-result.png', { type: 'image/png' });
+        if (navigator.canShare({ files: [file] })) {
+          await navigator.share({ files: [file], title: '말싸움 연구소 결과' });
+          return;
+        }
+      }
+      // 데스크탑 fallback: 링크 다운로드
       const link = document.createElement('a');
       link.download = 'msw-lab-result.png';
       link.href = dataUrl;
       link.click();
-    } catch {
-      alert('이미지 저장에 실패했어요. 스크린샷을 이용해주세요.');
+    } catch (e) {
+      if ((e as Error).name !== 'AbortError') {
+        alert('이미지 저장에 실패했어요. 스크린샷을 이용해주세요.');
+      }
     } finally {
       setIsSaving(false);
     }
