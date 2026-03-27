@@ -186,8 +186,8 @@ export default function ChatPage() {
             placeholder="하고 싶은 말을 입력하세요..."
             disabled={isLoading}
             rows={1}
-            className="flex-1 px-4 py-2.5 border-2 border-amber-100 rounded-2xl text-base font-medium focus:outline-none focus:border-amber-400 disabled:bg-amber-50 transition bg-amber-50 placeholder:text-black/30 resize-none overflow-y-auto leading-6"
-            style={{ height: '42px', maxHeight: '130px' }}
+            className="flex-1 px-4 border-2 border-amber-100 rounded-2xl text-base font-medium focus:outline-none focus:border-amber-400 disabled:bg-amber-50 transition bg-amber-50 placeholder:text-black/30 resize-none overflow-y-auto leading-6"
+            style={{ height: '42px', maxHeight: '130px', paddingTop: '11px', paddingBottom: '9px' }}
           />
           <button
             onClick={handleSend}
