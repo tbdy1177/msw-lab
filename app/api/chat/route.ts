@@ -17,40 +17,47 @@ export async function POST(req: NextRequest) {
 - 한국어로 답하세요
 - 답변은 2~4문장으로 짧고 현실적으로`;
 
+  const mapped = messages.map((m: { role: string; content: string }) => ({
+    role: m.role as 'user' | 'assistant',
+    content: m.content,
+  }));
+
   const apiMessages =
-    messages.length === 0
-      ? [{ role: 'user' as const, content: '대화를 시작해주세요.' }]
-      : messages.map((m: { role: string; content: string }) => ({
-          role: m.role as 'user' | 'assistant',
-          content: m.content,
-        }));
+    mapped.length === 0 || mapped[0].role === 'assistant'
+      ? [{ role: 'user' as const, content: '대화를 시작해주세요.' }, ...mapped]
+      : mapped;
 
-  const stream = anthropic.messages.stream({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 1024,
-    system: systemPrompt,
-    messages: apiMessages,
-  });
+  try {
+    const stream = anthropic.messages.stream({
+      model: 'claude-sonnet-4-5',
+      max_tokens: 1024,
+      system: systemPrompt,
+      messages: apiMessages,
+    });
 
-  const readableStream = new ReadableStream({
-    async start(controller) {
-      try {
-        for await (const chunk of stream) {
-          if (
-            chunk.type === 'content_block_delta' &&
-            chunk.delta.type === 'text_delta'
-          ) {
-            controller.enqueue(new TextEncoder().encode(chunk.delta.text));
+    const readableStream = new ReadableStream({
+      async start(controller) {
+        try {
+          for await (const chunk of stream) {
+            if (
+              chunk.type === 'content_block_delta' &&
+              chunk.delta.type === 'text_delta'
+            ) {
+              controller.enqueue(new TextEncoder().encode(chunk.delta.text));
+            }
           }
+          controller.close();
+        } catch (err) {
+          controller.error(err);
         }
-        controller.close();
-      } catch (err) {
-        controller.error(err);
-      }
-    },
-  });
+      },
+    });
 
-  return new Response(readableStream, {
-    headers: { 'Content-Type': 'text/plain; charset=utf-8' },
-  });
+    return new Response(readableStream, {
+      headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+    });
+  } catch (err) {
+    console.error('Chat API error:', err);
+    return new Response('AI 서버가 혼잡해요. 잠시 후 다시 시도해주세요.', { status: 503 });
+  }
 }

@@ -97,13 +97,7 @@ export default function ChatPage() {
         setShowAIEndModal(true);
       } else {
         setTimeout(() => {
-          textareaRef.current?.focus();
-          // focus 후 iOS 자동 스크롤 오버라이드 — 최하단 고정
-          setTimeout(() => {
-            if (chatAreaRef.current) {
-              chatAreaRef.current.scrollTop = chatAreaRef.current.scrollHeight;
-            }
-          }, 50);
+          textareaRef.current?.focus({ preventScroll: true });
         }, 100);
       }
     } catch {
