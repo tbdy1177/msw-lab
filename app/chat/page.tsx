@@ -17,6 +17,7 @@ export default function ChatPage() {
   const [showAIEndModal, setShowAIEndModal] = useState(false);
   const [toast, setToast] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
+  const chatAreaRef = useRef<HTMLDivElement>(null);
   const hasInitialized = useRef(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -94,7 +95,15 @@ export default function ChatPage() {
       if (full.includes('결과를 볼까요?')) {
         setShowAIEndModal(true);
       } else {
-        setTimeout(() => textareaRef.current?.focus(), 100);
+        setTimeout(() => {
+          textareaRef.current?.focus();
+          // focus 후 iOS 자동 스크롤 오버라이드 — 최하단 고정
+          setTimeout(() => {
+            if (chatAreaRef.current) {
+              chatAreaRef.current.scrollTop = chatAreaRef.current.scrollHeight;
+            }
+          }, 50);
+        }, 100);
       }
     } catch {
       showToast('잠시 문제가 생겼어요. 다시 시도해주세요.');
@@ -185,7 +194,7 @@ export default function ChatPage() {
       )}
 
       {/* Chat area */}
-      <div className="flex-1 overflow-y-auto">
+      <div ref={chatAreaRef} className="flex-1 overflow-y-auto">
         <div className="max-w-lg mx-auto px-4 py-4">
           {messages.map((msg, i) => (
             <ChatBubble key={i} role={msg.role} content={msg.content} characterImage={characterImage} />
