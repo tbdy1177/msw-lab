@@ -19,6 +19,7 @@ export default function ChatPage() {
   const bottomRef = useRef<HTMLDivElement>(null);
   const hasInitialized = useRef(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!target || !situation) {
@@ -37,6 +38,23 @@ export default function ChatPage() {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, streamingContent]);
+
+  // Visual Viewport로 컨테이너 크기 제어 (키보드 대응)
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const update = () => {
+      if (!containerRef.current) return;
+      containerRef.current.style.height = `${vv.height}px`;
+      containerRef.current.style.top = `${vv.offsetTop}px`;
+    };
+    vv.addEventListener('resize', update);
+    vv.addEventListener('scroll', update);
+    return () => {
+      vv.removeEventListener('resize', update);
+      vv.removeEventListener('scroll', update);
+    };
+  }, []);
 
 
   const showToast = (msg: string) => {
@@ -125,7 +143,11 @@ export default function ChatPage() {
   if (!target || !situation) return null;
 
   return (
-    <div className="h-dvh bg-amber-50 flex flex-col overflow-hidden">
+    <div
+      ref={containerRef}
+      className="fixed left-0 right-0 bg-amber-50 flex flex-col overflow-hidden"
+      style={{ top: 0, height: '100svh' }}
+    >
       {/* Header */}
       <div className="bg-white shrink-0 z-10">
         <div className="max-w-lg mx-auto px-4 py-3 flex items-center gap-3">
