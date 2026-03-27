@@ -89,6 +89,7 @@ export default function ChatPage() {
         setStreamingContent(full);
       }
 
+      if (!full) throw new Error('빈 응답');
       addMessage({ role: 'assistant', content: full, timestamp: new Date() });
       setStreamingContent('');
 
