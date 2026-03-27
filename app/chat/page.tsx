@@ -187,7 +187,7 @@ export default function ChatPage() {
             disabled={isLoading}
             rows={1}
             className="flex-1 px-4 py-2.5 border-2 border-amber-100 rounded-2xl text-base font-medium focus:outline-none focus:border-amber-400 disabled:bg-amber-50 transition bg-amber-50 placeholder:text-black/30 resize-none overflow-y-auto leading-6"
-            style={{ height: '42px', maxHeight: '130px' }}
+            style={{ height: '42px', maxHeight: '130px', paddingTop: '8px', paddingBottom: '12px' }}
           />
           <button
             onClick={handleSend}
