@@ -74,6 +74,8 @@ export default function ChatPage() {
 
       if (full.includes('결과를 볼까요?')) {
         setShowAIEndModal(true);
+      } else {
+        setTimeout(() => textareaRef.current?.focus(), 100);
       }
     } catch {
       showToast('잠시 문제가 생겼어요. 다시 시도해주세요.');
@@ -122,7 +124,7 @@ export default function ChatPage() {
   if (!target || !situation) return null;
 
   return (
-    <div className="h-screen bg-amber-50 flex flex-col">
+    <div className="h-dvh bg-amber-50 flex flex-col">
       {/* Header - full width BG */}
       <div className="bg-white sticky top-0 z-10">
         <div className="max-w-lg mx-auto px-4 py-3 flex items-center gap-3">
