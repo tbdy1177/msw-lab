@@ -19,6 +19,7 @@ export default function ChatPage() {
   const bottomRef = useRef<HTMLDivElement>(null);
   const hasInitialized = useRef(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const inputBarRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!target || !situation) {
@@ -37,6 +38,23 @@ export default function ChatPage() {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, streamingContent]);
+
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    if (!viewport) return;
+    const update = () => {
+      if (inputBarRef.current) {
+        const offset = window.innerHeight - viewport.height - viewport.offsetTop;
+        inputBarRef.current.style.transform = `translateY(-${offset}px)`;
+      }
+    };
+    viewport.addEventListener('resize', update);
+    viewport.addEventListener('scroll', update);
+    return () => {
+      viewport.removeEventListener('resize', update);
+      viewport.removeEventListener('scroll', update);
+    };
+  }, []);
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -176,7 +194,7 @@ export default function ChatPage() {
       </div>
 
       {/* Input bar - fixed above keyboard */}
-      <div className="bg-white fixed bottom-0 left-0 right-0 z-20">
+      <div ref={inputBarRef} className="bg-white fixed bottom-0 left-0 right-0 z-20">
         <div className="max-w-lg mx-auto px-4 py-3 flex gap-2 items-end">
           <textarea
             ref={textareaRef}
