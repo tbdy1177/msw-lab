@@ -18,45 +18,6 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   });
 }
 
-function drawBubblyBorder(
-  ctx: CanvasRenderingContext2D,
-  margin: number,
-  size: number,
-  color: string,
-  lineWidth: number
-) {
-  const x = margin, y = margin;
-  const w = size - 2 * margin;
-  const h = size - 2 * margin;
-
-  const targetR = 22;
-  const hBumps = Math.round(w / (2 * targetR));
-  const vBumps = Math.round(h / (2 * targetR));
-  const hR = w / (2 * hBumps);
-  const vR = h / (2 * vBumps);
-
-  ctx.beginPath();
-  // TOP: left→right, bumps outward (upward)
-  for (let i = 0; i < hBumps; i++) {
-    ctx.arc(x + (2 * i + 1) * hR, y, hR, Math.PI, 0, false);
-  }
-  // RIGHT: top→bottom, bumps outward (rightward)
-  for (let i = 0; i < vBumps; i++) {
-    ctx.arc(x + w, y + (2 * i + 1) * vR, vR, -Math.PI / 2, Math.PI / 2, false);
-  }
-  // BOTTOM: right→left, bumps outward (downward)
-  for (let i = hBumps - 1; i >= 0; i--) {
-    ctx.arc(x + (2 * i + 1) * hR, y + h, hR, 0, Math.PI, false);
-  }
-  // LEFT: bottom→top, bumps outward (leftward)
-  for (let i = vBumps - 1; i >= 0; i--) {
-    ctx.arc(x, y + (2 * i + 1) * vR, vR, Math.PI / 2, 3 * Math.PI / 2, false);
-  }
-  ctx.closePath();
-  ctx.strokeStyle = color;
-  ctx.lineWidth = lineWidth;
-  ctx.stroke();
-}
 
 function drawRoundRect(
   ctx: CanvasRenderingContext2D,
