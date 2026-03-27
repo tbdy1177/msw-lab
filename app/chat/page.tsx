@@ -143,8 +143,8 @@ export default function ChatPage() {
 
   return (
     <div className="h-dvh bg-amber-50 flex flex-col">
-      {/* Header - full width BG */}
-      <div className="bg-white sticky top-0 z-10">
+      {/* Header - fixed top */}
+      <div className="bg-white fixed top-0 left-0 right-0 z-10">
         <div className="max-w-lg mx-auto px-4 py-3 flex items-center gap-3">
           <button
             onClick={() => router.push('/')}
@@ -180,7 +180,7 @@ export default function ChatPage() {
       )}
 
       {/* Chat area */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto pt-[57px]">
         <div className="max-w-lg mx-auto px-4 py-4 pb-24">
           {messages.map((msg, i) => (
             <ChatBubble key={i} role={msg.role} content={msg.content} characterImage={characterImage} />
