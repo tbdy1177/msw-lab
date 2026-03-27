@@ -1,11 +1,13 @@
 'use client';
 
+import { getGrade } from '@/lib/getGrade';
+
 interface ScoreGaugeProps {
   score: number;
   grade: string;
 }
 
-export default function ScoreGauge({ score, grade }: ScoreGaugeProps) {
+export default function ScoreGauge({ score }: ScoreGaugeProps) {
   const radius = 70;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (score / 100) * circumference;
@@ -36,11 +38,11 @@ export default function ScoreGauge({ score, grade }: ScoreGaugeProps) {
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-4xl font-black text-gray-800">{score}</span>
-          <span className="text-xs text-gray-400 font-semibold">/ 100</span>
+          <span className="text-5xl font-black text-gray-800">{score}</span>
+          <span className="text-sm text-gray-400 font-semibold">/ 100</span>
         </div>
       </div>
-      <span className="mt-3 text-lg font-black text-amber-500 tracking-tight">{grade}</span>
+      <span className="mt-3 text-xl font-black text-amber-500 tracking-tight">{getGrade(score)}</span>
     </div>
   );
 }

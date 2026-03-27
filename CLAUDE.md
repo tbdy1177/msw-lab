@@ -18,5 +18,7 @@
 ## 작업 시 참고 파일
 - docs/PRD.md: 서비스 기획
 - docs/SPEC.md: 상세 기능 명세 (AI 프롬프트 포함)
+- docs/DESIGN.md: 디자인 정책 (컬러, 라인 원칙, 레이아웃, 컴포넌트 스타일)
+- docs/POLICY.md: 서비스 정책 (등급 체계, 로딩 메시지, AI 프롬프트 정책)
 - docs/STACK.md: 기술 스택 및 폴더 구조
 - docs/TASK.md: 현재 작업 목록

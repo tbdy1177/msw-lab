@@ -3,11 +3,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useChatStore, Message } from '@/store/chatStore';
+import { pickCharacter } from '@/lib/pickCharacter';
 import ChatBubble, { TypingIndicator } from '@/components/ChatBubble';
 
 export default function ChatPage() {
   const router = useRouter();
-  const { target, situation, messages, addMessage } = useChatStore();
+  const { target, situation, messages, addMessage, characterImage, setCharacterImage } = useChatStore();
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [streamingContent, setStreamingContent] = useState('');
@@ -17,6 +18,7 @@ export default function ChatPage() {
   const [toast, setToast] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
   const hasInitialized = useRef(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     if (!target || !situation) {
@@ -27,6 +29,7 @@ export default function ChatPage() {
   useEffect(() => {
     if (!target || !situation || hasInitialized.current || messages.length > 0) return;
     hasInitialized.current = true;
+    if (!characterImage) setCharacterImage(pickCharacter(target, situation));
     sendToAI([]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [target, situation]);
@@ -88,7 +91,24 @@ export default function ChatPage() {
     };
     addMessage(userMessage);
     setInput('');
+    if (textareaRef.current) {
+      textareaRef.current.style.height = '42px';
+    }
     await sendToAI([...messages, userMessage]);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInput(e.target.value);
+    const el = e.target;
+    el.style.height = '42px';
+    el.style.height = Math.min(el.scrollHeight, 130) + 'px';
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
   };
 
   const handleEnd = () => {
@@ -102,70 +122,79 @@ export default function ChatPage() {
   if (!target || !situation) return null;
 
   return (
-    <div className="min-h-screen bg-amber-50 flex justify-center">
-    <div className="flex flex-col h-screen w-full max-w-lg">
-      {/* Header */}
-      <div className="bg-white border-b-2 border-amber-100 px-4 py-3 flex items-center gap-3 sticky top-0 z-10">
-        <button
-          onClick={() => router.push('/')}
-          className="text-amber-400 hover:text-amber-500 transition text-xl font-black"
-        >
-          ←
-        </button>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-black text-gray-800 truncate tracking-tight">{target}와의 말싸움 ⚡</p>
+    <div className="h-screen bg-amber-50 flex flex-col">
+      {/* Header - full width BG */}
+      <div className="bg-white sticky top-0 z-10">
+        <div className="max-w-lg mx-auto px-4 py-3 flex items-center gap-3">
           <button
-            onClick={() => setShowSituation(!showSituation)}
-            className="text-xs text-amber-500 font-semibold hover:underline"
+            onClick={() => router.push('/')}
+            className="text-amber-400 hover:text-amber-500 transition text-2xl font-black"
           >
-            {showSituation ? '상황 접기' : '상황 보기'}
+            ←
+          </button>
+          <div className="flex-1 min-w-0">
+            <p className="text-base font-black text-gray-800 truncate tracking-tight">{target}와의 말싸움 ⚡</p>
+            <button
+              onClick={() => setShowSituation(!showSituation)}
+              className="text-sm text-amber-500 font-semibold hover:underline"
+            >
+              {showSituation ? '상황 접기' : '상황 보기'}
+            </button>
+          </div>
+          <button
+            onClick={handleEnd}
+            className="text-sm text-white font-bold bg-red-400 hover:bg-red-500 px-3 py-1.5 rounded-xl transition shrink-0"
+          >
+            여기서 끝내기
           </button>
         </div>
-        <button
-          onClick={handleEnd}
-          className="text-xs text-white font-bold bg-red-400 hover:bg-red-500 px-3 py-1.5 rounded-xl transition shrink-0"
-        >
-          여기서 끝내기
-        </button>
       </div>
 
       {/* Situation toggle */}
       {showSituation && (
-        <div className="bg-amber-100 px-4 py-3 text-sm text-amber-800 font-medium border-b-2 border-amber-200">
-          {situation}
+        <div className="bg-amber-100">
+          <div className="max-w-lg mx-auto px-4 py-3 text-base text-amber-800 font-medium">
+            {situation}
+          </div>
         </div>
       )}
 
       {/* Chat area */}
-      <div className="flex-1 overflow-y-auto px-4 py-4">
-        {messages.map((msg, i) => (
-          <ChatBubble key={i} role={msg.role} content={msg.content} />
-        ))}
-        {isLoading && streamingContent === '' && <TypingIndicator />}
-        {streamingContent && (
-          <ChatBubble role="assistant" content={streamingContent} />
-        )}
-        <div ref={bottomRef} />
+      <div className="flex-1 overflow-y-auto">
+        <div className="max-w-lg mx-auto px-4 py-4">
+          {messages.map((msg, i) => (
+            <ChatBubble key={i} role={msg.role} content={msg.content} characterImage={characterImage} />
+          ))}
+          {isLoading && streamingContent === '' && <TypingIndicator characterImage={characterImage} />}
+          {streamingContent && (
+            <ChatBubble role="assistant" content={streamingContent} characterImage={characterImage} />
+          )}
+          <div ref={bottomRef} />
+        </div>
       </div>
 
-      {/* Input */}
-      <div className="bg-white border-t-2 border-amber-100 px-4 py-3 flex gap-2 sticky bottom-0">
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
-          placeholder="하고 싶은 말을 입력하세요..."
-          disabled={isLoading}
-          className="flex-1 px-4 py-2.5 border-2 border-amber-100 rounded-2xl text-sm font-medium focus:outline-none focus:border-amber-400 disabled:bg-amber-50 transition bg-amber-50 placeholder:text-gray-300"
-        />
-        <button
-          onClick={handleSend}
-          disabled={isLoading || !input.trim()}
-          className="px-4 py-2.5 bg-amber-400 text-white rounded-2xl text-sm font-black disabled:opacity-40 hover:bg-amber-500 active:scale-95 transition-all shadow-sm"
-        >
-          전송
-        </button>
+      {/* Input bar - full width BG */}
+      <div className="bg-white sticky bottom-0">
+        <div className="max-w-lg mx-auto px-4 py-3 flex gap-2 items-end">
+          <textarea
+            ref={textareaRef}
+            value={input}
+            onChange={handleInputChange}
+            onKeyDown={handleKeyDown}
+            placeholder="하고 싶은 말을 입력하세요..."
+            disabled={isLoading}
+            rows={1}
+            className="flex-1 px-4 py-2.5 border-2 border-amber-100 rounded-2xl text-base font-medium focus:outline-none focus:border-amber-400 disabled:bg-amber-50 transition bg-amber-50 placeholder:text-black/30 resize-none overflow-y-auto leading-6"
+            style={{ height: '42px', maxHeight: '130px' }}
+          />
+          <button
+            onClick={handleSend}
+            disabled={isLoading || !input.trim()}
+            className="px-4 py-2.5 bg-amber-400 text-white rounded-2xl text-base font-black disabled:opacity-40 hover:bg-amber-500 active:scale-95 transition-all shadow-sm shrink-0"
+          >
+            전송
+          </button>
+        </div>
       </div>
 
       {/* End modal */}
@@ -191,11 +220,10 @@ export default function ChatPage() {
 
       {/* Toast */}
       {toast && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-sm font-medium px-5 py-2.5 rounded-full shadow-lg z-50 whitespace-nowrap">
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-base font-medium px-5 py-2.5 rounded-full shadow-lg z-50 whitespace-nowrap">
           {toast}
         </div>
       )}
-    </div>
     </div>
   );
 }
@@ -215,19 +243,19 @@ function Modal({
 }) {
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-6">
-      <div className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-xl border-2 border-amber-100">
-        <h3 className="text-lg font-black text-gray-800 mb-2 tracking-tight">{title}</h3>
-        <p className="text-sm text-gray-500 font-medium mb-6">{description}</p>
+      <div className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-xl">
+        <h3 className="text-xl font-black text-gray-800 mb-2 tracking-tight">{title}</h3>
+        <p className="text-base text-gray-500 font-medium mb-6">{description}</p>
         <div className="flex gap-3">
           <button
             onClick={onCancel}
-            className="flex-1 py-3 border-2 border-amber-200 text-amber-600 font-bold rounded-2xl hover:bg-amber-50 transition text-sm"
+            className="flex-1 py-3 border-2 border-amber-200 text-amber-600 font-bold rounded-2xl hover:bg-amber-50 transition text-base"
           >
             {cancelLabel}
           </button>
           <button
             onClick={onConfirm}
-            className="flex-1 py-3 bg-amber-400 text-white font-black rounded-2xl hover:bg-amber-500 transition text-sm"
+            className="flex-1 py-3 bg-amber-400 text-white font-black rounded-2xl hover:bg-amber-500 transition text-base"
           >
             확인
           </button>

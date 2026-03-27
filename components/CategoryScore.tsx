@@ -15,10 +15,10 @@ export default function CategoryScore({ name, score, description }: CategoryScor
   };
 
   return (
-    <div className="bg-white rounded-2xl p-4 shadow-sm border-2 border-amber-100">
+    <div className="bg-white rounded-2xl p-4 shadow-sm">
       <div className="flex justify-between items-center mb-2">
-        <span className="font-black text-gray-800 text-sm tracking-tight">{name}</span>
-        <span className="text-base font-black text-amber-500">{score}</span>
+        <span className="font-black text-gray-800 text-base tracking-tight">{name}</span>
+        <span className="text-lg font-black text-amber-500">{score}</span>
       </div>
       <div className="w-full bg-amber-50 rounded-full h-2.5 mb-2">
         <div
@@ -26,7 +26,7 @@ export default function CategoryScore({ name, score, description }: CategoryScor
           style={{ width: `${score}%` }}
         />
       </div>
-      <p className="text-xs text-gray-500 leading-relaxed font-medium">{description}</p>
+      <p className="text-sm text-gray-500 leading-relaxed font-medium">{description}</p>
     </div>
   );
 }

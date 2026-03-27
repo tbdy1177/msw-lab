@@ -27,11 +27,13 @@ interface ChatState {
   situation: string;
   messages: Message[];
   analysis: AnalysisResult | null;
+  characterImage: string;
 
   setTarget: (target: string) => void;
   setSituation: (situation: string) => void;
   addMessage: (message: Message) => void;
   setAnalysis: (analysis: AnalysisResult) => void;
+  setCharacterImage: (image: string) => void;
   reset: () => void;
 }
 
@@ -40,12 +42,14 @@ export const useChatStore = create<ChatState>((set) => ({
   situation: '',
   messages: [],
   analysis: null,
+  characterImage: '',
 
   setTarget: (target) => set({ target }),
   setSituation: (situation) => set({ situation }),
   addMessage: (message) =>
     set((state) => ({ messages: [...state.messages, message] })),
   setAnalysis: (analysis) => set({ analysis }),
+  setCharacterImage: (image) => set({ characterImage: image }),
   reset: () =>
-    set({ target: '', situation: '', messages: [], analysis: null }),
+    set({ target: '', situation: '', messages: [], analysis: null, characterImage: '' }),
 }));

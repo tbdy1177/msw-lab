@@ -1,19 +1,35 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useChatStore, AnalysisResult } from '@/store/chatStore';
 import ScoreGauge from '@/components/ScoreGauge';
 import CategoryScore from '@/components/CategoryScore';
-import ResultCard from '@/components/ResultCard';
+import { generateShareImage } from '@/lib/generateShareImage';
+import { getGrade } from '@/lib/getGrade';
+
 
 export default function ResultPage() {
   const router = useRouter();
   const { target, situation, messages, analysis, setAnalysis, reset } = useChatStore();
+
+  const [displayAnalysis, setDisplayAnalysis] = useState<AnalysisResult | null>(analysis);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [showPreview, setShowPreview] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
+  const [copyDone, setCopyDone] = useState(false);
+
+  const loadingMessages = [
+    '대화를 분석하고 있어요...',
+    '조금만 기다려주세요...',
+    '많이 화났죠?',
+    '그동안 당신이 말싸움에 실패했던 원인...',
+    '정확하게 분석해 드립니다...',
+  ];
+  const [msgIndex, setMsgIndex] = useState(0);
+  const [msgVisible, setMsgVisible] = useState(true);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     if (!messages.length) {
@@ -25,6 +41,19 @@ export default function ResultPage() {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (!isLoading && displayAnalysis) return;
+    intervalRef.current = setInterval(() => {
+      setMsgVisible(false);
+      setTimeout(() => {
+        setMsgIndex((i) => (i + 1) % loadingMessages.length);
+        setMsgVisible(true);
+      }, 400);
+    }, 3000);
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoading, displayAnalysis]);
 
   const fetchAnalysis = async () => {
     setIsLoading(true);
@@ -38,6 +67,7 @@ export default function ResultPage() {
       if (!res.ok) throw new Error();
       const data: AnalysisResult = await res.json();
       setAnalysis(data);
+      setDisplayAnalysis(data);
     } catch {
       setError('잠시 문제가 생겼어요. 다시 시도해주세요.');
     } finally {
@@ -46,16 +76,13 @@ export default function ResultPage() {
   };
 
   const handleDownload = async () => {
-    if (!analysis) return;
+    if (!displayAnalysis) return;
     setIsSaving(true);
     try {
-      const html2canvas = (await import('html2canvas')).default;
-      const el = document.getElementById('result-card');
-      if (!el) throw new Error();
-      const canvas = await html2canvas(el, { scale: 1, useCORS: true });
+      const dataUrl = await generateShareImage(displayAnalysis);
       const link = document.createElement('a');
       link.download = 'msw-lab-result.png';
-      link.href = canvas.toDataURL('image/png');
+      link.href = dataUrl;
       link.click();
     } catch {
       alert('이미지 저장에 실패했어요. 스크린샷을 이용해주세요.');
@@ -64,12 +91,41 @@ export default function ResultPage() {
     }
   };
 
-  const handleReset = () => {
-    reset();
-    router.push('/');
+  const handleShare = async () => {
+    if (!displayAnalysis) return;
+    setIsSharing(true);
+    try {
+      const shareUrl = window.location.origin;
+      const grade = getGrade(displayAnalysis.totalScore);
+      const text = `말싸움 연구소에서 ${displayAnalysis.totalScore}점 (${grade}) 받았어요!\n나도 테스트해볼래?`;
+
+      let usedShare = false;
+      if (navigator.share) {
+        try {
+          await navigator.share({ title: '말싸움 연구소', text, url: shareUrl });
+          usedShare = true;
+        } catch (e) {
+          if ((e as Error).name === 'AbortError') usedShare = true;
+        }
+      }
+
+      if (!usedShare) {
+        try {
+          await navigator.clipboard.writeText(shareUrl);
+          setCopyDone(true);
+          setTimeout(() => setCopyDone(false), 2500);
+        } catch {
+          alert(`링크를 복사해주세요:\n${shareUrl}`);
+        }
+      }
+    } finally {
+      setIsSharing(false);
+    }
   };
 
-  if (isLoading || !analysis) {
+  const handleReset = () => { reset(); router.push('/'); };
+
+  if (isLoading || !displayAnalysis) {
     return (
       <main className="min-h-screen flex flex-col items-center justify-center px-4 py-12 bg-amber-50">
         <div className="w-full max-w-lg space-y-4 animate-pulse">
@@ -79,16 +135,16 @@ export default function ResultPage() {
           <div className="h-20 bg-amber-100 rounded-3xl" />
           <div className="h-20 bg-amber-100 rounded-3xl" />
         </div>
-        <p className="mt-6 text-sm text-gray-400">대화를 분석하고 있어요...</p>
+        <p
+          className="mt-6 text-base font-semibold shimmer-text transition-opacity duration-400"
+          style={{ opacity: msgVisible ? 1 : 0 }}
+        >
+          {loadingMessages[msgIndex]}
+        </p>
         {error && (
           <div className="mt-4 text-center">
-            <p className="text-sm text-red-400">{error}</p>
-            <button
-              onClick={fetchAnalysis}
-              className="mt-2 text-sm text-indigo-500 underline"
-            >
-              다시 시도
-            </button>
+            <p className="text-base text-red-400">{error}</p>
+            <button onClick={fetchAnalysis} className="mt-2 text-base text-amber-500 underline">다시 시도</button>
           </div>
         )}
       </main>
@@ -98,33 +154,35 @@ export default function ResultPage() {
   return (
     <main className="min-h-screen bg-amber-50 pb-20">
       <div className="max-w-lg mx-auto px-4 pt-10 space-y-6">
-        <h1 className="text-2xl font-black text-center text-gray-800 tracking-tight">결과 리포트 🏆</h1>
+        <h1 className="text-3xl font-black text-center text-gray-800 tracking-tight">결과 리포트 🏆</h1>
 
         {/* Section A: 종합 점수 */}
-        <div className="bg-white rounded-3xl p-6 shadow-sm border-2 border-amber-100 flex flex-col items-center">
-          <ScoreGauge score={analysis.totalScore} grade={analysis.grade} />
+        <div className="bg-white rounded-3xl shadow-sm p-6 flex flex-col items-center gap-5">
+          <ScoreGauge score={displayAnalysis.totalScore} grade={displayAnalysis.grade} />
+          <button
+            onClick={handleDownload}
+            disabled={isSaving}
+            className="w-full py-3 bg-amber-50 text-amber-500 font-black text-sm rounded-2xl hover:bg-amber-100 disabled:opacity-50 active:scale-95 transition-all tracking-tight"
+          >
+            {isSaving ? '이미지 생성 중...' : '⬇ 결과 이미지 저장하기'}
+          </button>
         </div>
 
         {/* Section B: 항목별 분석 */}
         <div className="space-y-3">
-          <h2 className="text-base font-black text-gray-800 tracking-tight">항목별 분석</h2>
-          {analysis.categories.map((cat) => (
-            <CategoryScore
-              key={cat.name}
-              name={cat.name}
-              score={cat.score}
-              description={cat.description}
-            />
+          <h2 className="text-lg font-black text-gray-800 tracking-tight">항목별 분석</h2>
+          {displayAnalysis.categories.map((cat) => (
+            <CategoryScore key={cat.name} name={cat.name} score={cat.score} description={cat.description} />
           ))}
         </div>
 
         {/* Section C: 피드백 */}
-        <div className="bg-white rounded-3xl p-5 shadow-sm border-2 border-amber-100 space-y-5">
+        <div className="bg-white rounded-3xl p-5 shadow-sm space-y-5">
           <div>
-            <h2 className="text-base font-black text-green-600 mb-3 tracking-tight">👍 잘한 점</h2>
+            <h2 className="text-lg font-black text-green-600 mb-3 tracking-tight">👍 잘한 점</h2>
             <ul className="space-y-2">
-              {analysis.strengths.map((s, i) => (
-                <li key={i} className="text-sm text-gray-600 flex gap-2">
+              {displayAnalysis.strengths.map((s, i) => (
+                <li key={i} className="text-base text-gray-600 flex gap-2">
                   <span className="text-green-400 shrink-0">•</span>
                   <span>{s}</span>
                 </li>
@@ -132,10 +190,10 @@ export default function ResultPage() {
             </ul>
           </div>
           <div>
-            <h2 className="text-base font-black text-amber-500 mb-3 tracking-tight">💡 개선할 점</h2>
+            <h2 className="text-lg font-black text-amber-500 mb-3 tracking-tight">💡 개선할 점</h2>
             <ul className="space-y-4">
-              {analysis.improvements.map((imp, i) => (
-                <li key={i} className="text-sm">
+              {displayAnalysis.improvements.map((imp, i) => (
+                <li key={i} className="text-base">
                   <p className="text-gray-700 font-medium">{imp.point}</p>
                   <p className="text-gray-400 mt-1">{imp.tip}</p>
                 </li>
@@ -144,50 +202,22 @@ export default function ResultPage() {
           </div>
         </div>
 
-        {/* Section D: 공유 이미지 */}
-        <div className="bg-white rounded-3xl p-5 shadow-sm border-2 border-amber-100 space-y-3">
-          <h2 className="text-base font-black text-gray-800 tracking-tight">공유하기</h2>
+        {/* 하단 버튼 */}
+        <div className="flex gap-3">
           <button
-            onClick={() => setShowPreview(!showPreview)}
-            className="w-full py-3 border-2 border-amber-200 text-amber-600 text-sm font-bold rounded-2xl hover:bg-amber-50 transition"
+            onClick={handleShare}
+            disabled={isSharing}
+            className="flex-1 py-4 border-2 border-amber-200 text-amber-500 font-black rounded-2xl hover:bg-amber-50 active:scale-95 transition-all text-base tracking-tight disabled:opacity-50"
           >
-            {showPreview ? '미리보기 숨기기' : '공유 카드 미리보기'}
+            {isSharing ? '준비 중...' : copyDone ? '링크 복사됐어요 ✓' : '친구들에게 소문내기'}
           </button>
-          {showPreview && (
-            <div
-              className="overflow-hidden rounded-xl mx-auto"
-              style={{
-                width: 324,
-                height: 324,
-                transform: 'none',
-              }}
-            >
-              <div style={{ transform: 'scale(0.3)', transformOrigin: 'top left', width: 1080, height: 1080 }}>
-                <ResultCard analysis={analysis} />
-              </div>
-            </div>
-          )}
           <button
-            onClick={handleDownload}
-            disabled={isSaving}
-            className="w-full py-3 bg-amber-400 text-white font-black rounded-2xl disabled:opacity-60 hover:bg-amber-500 active:scale-95 transition-all text-sm tracking-tight"
+            onClick={handleReset}
+            className="flex-1 py-4 bg-amber-400 text-white font-black rounded-2xl hover:bg-amber-500 active:scale-95 transition-all text-base tracking-tight"
           >
-            {isSaving ? '저장 중...' : '이미지 저장하기'}
+            다시 하기
           </button>
         </div>
-
-        {/* 다시 하기 */}
-        <button
-          onClick={handleReset}
-          className="w-full py-4 border-2 border-amber-300 text-amber-600 font-black rounded-2xl hover:bg-amber-50 active:scale-95 transition-all tracking-tight"
-        >
-          다시 하기
-        </button>
-      </div>
-
-      {/* html2canvas용 숨겨진 카드 */}
-      <div className="fixed" style={{ left: -9999, top: -9999 }}>
-        <ResultCard analysis={analysis} />
       </div>
     </main>
   );
