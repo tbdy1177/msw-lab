@@ -163,7 +163,7 @@ export default function ChatPage() {
 
       {/* Chat area */}
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-lg mx-auto px-4 py-4">
+        <div className="max-w-lg mx-auto px-4 py-4 pb-24">
           {messages.map((msg, i) => (
             <ChatBubble key={i} role={msg.role} content={msg.content} characterImage={characterImage} />
           ))}
@@ -175,8 +175,8 @@ export default function ChatPage() {
         </div>
       </div>
 
-      {/* Input bar - full width BG */}
-      <div className="bg-white sticky bottom-0">
+      {/* Input bar - fixed above keyboard */}
+      <div className="bg-white fixed bottom-0 left-0 right-0 z-20">
         <div className="max-w-lg mx-auto px-4 py-3 flex gap-2 items-end">
           <textarea
             ref={textareaRef}
@@ -186,8 +186,8 @@ export default function ChatPage() {
             placeholder="하고 싶은 말을 입력하세요..."
             disabled={isLoading}
             rows={1}
-            className="flex-1 px-4 border-2 border-amber-100 rounded-2xl text-base font-medium focus:outline-none focus:border-amber-400 disabled:bg-amber-50 transition bg-amber-50 placeholder:text-black/30 resize-none overflow-y-auto leading-6"
-            style={{ height: '42px', maxHeight: '130px', paddingTop: '11px', paddingBottom: '9px' }}
+            className="flex-1 px-4 py-2.5 border-2 border-amber-100 rounded-2xl text-base font-medium focus:outline-none focus:border-amber-400 disabled:bg-amber-50 transition bg-amber-50 placeholder:text-black/30 resize-none overflow-y-auto leading-6"
+            style={{ height: '42px', maxHeight: '130px' }}
           />
           <button
             onClick={handleSend}
