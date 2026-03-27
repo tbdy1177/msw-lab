@@ -16,7 +16,6 @@ export default function ChatPage() {
   const [showEndModal, setShowEndModal] = useState(false);
   const [showAIEndModal, setShowAIEndModal] = useState(false);
   const [toast, setToast] = useState('');
-  const bottomRef = useRef<HTMLDivElement>(null);
   const chatAreaRef = useRef<HTMLDivElement>(null);
   const hasInitialized = useRef(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -37,7 +36,9 @@ export default function ChatPage() {
   }, [target, situation]);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (chatAreaRef.current) {
+      chatAreaRef.current.scrollTop = chatAreaRef.current.scrollHeight;
+    }
   }, [messages, streamingContent]);
 
   // Visual Viewport로 컨테이너 크기 제어 (키보드 대응)
@@ -198,7 +199,6 @@ export default function ChatPage() {
           {streamingContent && (
             <ChatBubble role="assistant" content={streamingContent} characterImage={characterImage} />
           )}
-          <div ref={bottomRef} />
         </div>
       </div>
 
