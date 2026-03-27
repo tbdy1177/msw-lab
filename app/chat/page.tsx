@@ -36,9 +36,11 @@ export default function ChatPage() {
   }, [target, situation]);
 
   useEffect(() => {
-    if (chatAreaRef.current) {
-      chatAreaRef.current.scrollTop = chatAreaRef.current.scrollHeight;
-    }
+    requestAnimationFrame(() => {
+      if (chatAreaRef.current) {
+        chatAreaRef.current.scrollTop = chatAreaRef.current.scrollHeight;
+      }
+    });
   }, [messages, streamingContent]);
 
   // Visual Viewport로 컨테이너 크기 제어 (키보드 대응)
@@ -49,6 +51,11 @@ export default function ChatPage() {
       if (!containerRef.current) return;
       containerRef.current.style.height = `${vv.height}px`;
       containerRef.current.style.top = `${vv.offsetTop}px`;
+      requestAnimationFrame(() => {
+        if (chatAreaRef.current) {
+          chatAreaRef.current.scrollTop = chatAreaRef.current.scrollHeight;
+        }
+      });
     };
     vv.addEventListener('resize', update);
     vv.addEventListener('scroll', update);
